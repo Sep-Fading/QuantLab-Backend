@@ -3,6 +3,8 @@ use sqlx::PgPool;
 use dotenv::dotenv;
 use std::env;
 
+mod yf_data_fetcher;
+
 #[tokio::main]
 async fn main() {
     println!("✅Successfully booted QuantLab Core!");
