@@ -21,12 +21,29 @@ async fn main() {
     };
 
     // Connect to DB
-    match PgPool::connect(&db_url).await {
+    let pool = match PgPool::connect(&db_url).await {
         Ok(_pool) => {
             println!("✅ Successfully connected to QuantLab DB!");
+            _pool
         }
         Err(e) => {
             println!("❌Failed to connect to QuantLab DB: {}!", e);
+            return;
         }
     };
+
+    // Run migrations
+    println!("🔁 Running database migrations...");
+    match sqlx::migrate!("./migrations").run(&pool).await {
+        Ok(_) => println!("✅Migrations complete!"),
+        Err(e) => println!("⚠️Migrations error: {}", e),
+    }
+
+    // Verify tables exist
+    let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM STOCK_PRICES")
+        .fetch_one(&pool)
+        .await
+        .unwrap_or((0,));
+
+    println!("📊Stock prices table has {} records", count.0);
 }
